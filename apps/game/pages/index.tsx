@@ -72,170 +72,153 @@ const IMAGE_WIDTH = 120;
 
 const CARD_WIDTH = 200;
 const CARD_HEIGHT = 150;
-const CARD_MARGIN = 5;
-
-
 const PLAYER_SIZE = 50;
 const BULLET_SIZE = 20;
-const GAME_HEIGHT = 750;
+const GAME_HEIGHT = 700;
 const GAME_WIDTH = 1000;
-const GRAVITY = 3;
-const JUMP_HEIGHT = 100;
-const OBSTACLE_WIDTH = 40;
-const OBSTACLE_GAP = 200;
+const GRAVITY = 2;
 
 export default function Page() {
-  
-  const [playerPos, setPlayerPos] = useState(250);
-  const [gameHasStarted, setGameHasStarted] = useState(false);
-  const [obstacleHeight, setObstacleHeight] = useState(100);
-  const [obstacleLeft, setObstacleLeft] = useState(GAME_WIDTH - OBSTACLE_WIDTH);
-  const [score, setScore] = useState(0);
-  const bottomObstacleHeight = GAME_HEIGHT - OBSTACLE_GAP - obstacleHeight;
+  const { disneyPrincessTrivia: quizletSet } = Fun.getAllSetsMap();
 
+
+  const [gameIsActive, setGameIsActive] = useState(false);
+  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(3);
 
   const [mousePos, setMousePos] = useState({x:0, y:0});
   const [bulletIsActive, setBulletIsActive] = useState(false);
   const [bulletVelocity, setBulletVelocity] = useState({x:0, y:0});
+  const [correctId, setCorrectId] = useState("");
+  const [currTerm, setCurrTerm] = useState("");
+  const [rowPos, setRowPos] = useState(0);  
 
-
-  // Tracks the mouse's position on the screen when clicked.
-  useEffect(() => {
-    const handleMouseClick = (event: { clientX: any; clientY: any; }) => {
-      
-
-      // setBulletPos({})
-      
-      // setMousePos({ x: event.clientX, y: event.clientY});
-      setBulletIsActive(true);
-    };
-      window.addEventListener('click', handleMouseClick);
-
-      return () => {
-        window.removeEventListener(
-          'click',
-          handleMouseClick
-        );
-      };
-  }, []);
-  
-  // Fires the bullet from the player to the mouse's clicked location.
-  useEffect(() => {
-    let bulletId;
-    if (bulletIsActive) {
-      bulletId = setInterval(() => {
-              // setBulletPos(bulletPos => {x: bulletPos.x + xVelocity, y: bulletPos.y + yVelocity})
-            }, 12)
-    }
-      return () => {
-        clearInterval(bulletId);
-      };
-    }, [bulletIsActive]);
-
-
-  // // Moves the player continuously downward until it reaches the edge.
+  // // Tracks the mouse's position on the screen when clicked.
   // useEffect(() => {
-  //   let timeId;
-  //   if (gameHasStarted && playerPos < GAME_HEIGHT - PLAYER_SIZE) {
-  //     timeId = setInterval(() => {
-  //       setPlayerPos(playerPos => playerPos + GRAVITY)
-  //     }, 12)
-  //   }
-  //   return () => {
-  //     clearInterval(timeId);
+  //   const handleMouseClick = (event: { clientX: any; clientY: any; }) => {
   //   };
-  // }, [playerPos, gameHasStarted]);
-
-
-  // // Moves the obstacle continuously to the right until it reaches the right edge.
-  // useEffect(() => {
-  //   let obstacleId;
-  //   if (gameHasStarted && obstacleLeft >= -OBSTACLE_WIDTH) {
-  //     obstacleId = setInterval(() => {
-  //       setObstacleLeft((obstacleLeft) => obstacleLeft - 5);
-  //     }, 12);
+  //     window.addEventListener('click', handleMouseClick);
   //     return () => {
-  //       clearInterval(obstacleId);
+  //       window.removeEventListener(
+  //         'click',
+  //         handleMouseClick
+  //       );
   //     };
-  //   } else {
-  //     setObstacleLeft(GAME_WIDTH - OBSTACLE_WIDTH);
-  //     setObstacleHeight(Math.floor(Math.random() * (GAME_HEIGHT - OBSTACLE_GAP)));
-  //     setScore(score => score + 1);
-  //   }
-  // }, [obstacleLeft, gameHasStarted]);
-
-
-  // // Checks for collision between the player and the obstacles.
+  // }, []);
+  
+  // // Fires the bullet from the player to the mouse's clicked location.
   // useEffect(() => {
-  //   const hasCollidedWithTopObstacle = playerPos >= 0 && playerPos < obstacleHeight;
-  //   const hasCollidedWithBottomObstacle = playerPos <= 500 && playerPos >= 500 - bottomObstacleHeight;
-  //   if (obstacleLeft >= 0 && obstacleLeft <= OBSTACLE_WIDTH && (hasCollidedWithBottomObstacle || hasCollidedWithTopObstacle)) {
-  //     setGameHasStarted(false);
+  //   let bulletId;
+  //   if (bulletIsActive) {
+  //     bulletId = setInterval(() => {
+  //             // setBulletPos(bulletPos => {x: bulletPos.x + xVelocity, y: bulletPos.y + yVelocity})
+  //           }, 12)
   //   }
-  // }, [obstacleLeft, gameHasStarted, playerPos, obstacleHeight, bottomObstacleHeight]);
+  //     return () => {
+  //       clearInterval(bulletId);
+  //     };
+  //   }, [bulletIsActive]);
 
 
-  // // Logic for jumping.
-  // const handleClick = () => {
-  //   let newPlayerPos = playerPos - JUMP_HEIGHT;
-  //   if (!gameHasStarted) {
-  //     setGameHasStarted(true);
-  //     setScore(score => 0);
-  //   } else if (newPlayerPos < 0) {
-  //     setPlayerPos(0);
-  //   } else {
-  //     setPlayerPos(newPlayerPos);
-  //   }
-  // }
 
+
+
+  // Moves the row of cards continuously downward until it reaches the edge or the game ends.
+  useEffect(() => {
+    let timeId;
+    if (gameIsActive && rowPos + CARD_HEIGHT < GAME_HEIGHT) {
+      timeId = setInterval(() => {
+        setRowPos(rowPos => rowPos + GRAVITY)
+      }, 12)
+      return () => {
+        clearInterval(timeId);
+      };
+    } else if (gameIsActive) {
+      setLives(lives => lives - 1);
+      resetCards();
+    }
+  }, [gameIsActive, lives, rowPos]);
+
+
+  // Constantly checks if we ran out of lives. If so, ends the game.
+  useEffect(() => {
+    if (gameIsActive && lives <= 0) {
+      setGameIsActive(false);
+      resetCards();
+    }
+  }, [gameIsActive, lives]);
+
+  // Logic for clicking cards.
+  const handleClick = (e) => {
+    if (e.target.id == correctId) {
+      e.target.style.backgroundColor = "green";
+      setScore(score => score + 1);
+      resetCards();
+    } else {
+      e.target.style.backgroundColor = "red";
+      e.target.style.pointerEvents = "none";
+      setLives(lives => lives - 1);
+    }
+  }
+
+  // Starts the game if it isn't already active.
+  const startGame = () => {
+    if (!gameIsActive) {
+      setGameIsActive(true);
+      setScore(0);
+      setLives(3);
+      resetCards();
+    }
+  }
+
+  // Resets the cards to their starting conditions.
+  const resetCards = () => {
+    document.getElementById("card-0").style.backgroundColor = "lightslategray";
+    document.getElementById("card-1").style.backgroundColor = "lightslategray";
+    document.getElementById("card-2").style.backgroundColor = "lightslategray";
+    document.getElementById("card-0").style.pointerEvents = "auto";
+    document.getElementById("card-1").style.pointerEvents = "auto";
+    document.getElementById("card-2").style.pointerEvents = "auto";
+    setRowPos(0);
+    getCards();
+  }
+
+  // Retrieves 3 random cards and sets the id of the correct one.
+  const getCards = () => {
+    const shuffled = quizletSet.studiableItem.sort(() => 0.5 - Math.random());
+    let selected = shuffled.slice(0, 3);
+    for (var i = 0; i < selected.length; i++) {
+      let def = selected[i].cardSides[0].media[0]["plainText"];
+      document.getElementById(`card-${i}-text`).innerHTML = def;
+    }
+    const id = Math.floor((Math.random() * 3));
+    setCorrectId(`card-${id}`);
+    let term = selected[id].cardSides[1].media[0]["plainText"];
+    setCurrTerm(term);
+  }
 
   return (
-    <Div>
+    <Div onClick={startGame}>
       <GameBox height={GAME_HEIGHT} width={GAME_WIDTH}>
-          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={0}>
-            <span> Term 1 </span>
+        <Row top={rowPos}>
+          <Card id="card-0" height={CARD_HEIGHT} width={CARD_WIDTH} left={0} onClick={(e) => handleClick(e)}>
+            <span id="card-0-text"> Definition 1 </span>
           </Card>
-          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH}>
-            <span> Term 2 </span>
+          <Card id="card-1" height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH} onClick={(e) => handleClick(e)}>
+            <span id="card-1-text"> Definition 2 </span>
           </Card>
-          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH * 2}>
-            <span> Term 3 </span>
+          <Card id="card-2" height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH * 2} onClick={(e) => handleClick(e)}>
+            <span id="card-2-text"> Definition 3 </span>
           </Card>
-
+        </Row>
           <Player size={PLAYER_SIZE} top={GAME_HEIGHT - PLAYER_SIZE} marginLeft={-PLAYER_SIZE / 2}/>
           <Bullet size={BULLET_SIZE} top={GAME_HEIGHT - BULLET_SIZE} marginLeft={-BULLET_SIZE / 2}/>
       </GameBox>
-      {/* <div>
-      The mouse is at position{' '}
-      <b>
-        ({mousePos.x}, {mousePos.y})
-      </b>
-    </div> */}
+      <span>Score: {score}, Lives: {lives}</span>
+      <p>{currTerm}</p>
     </Div>
-
-
-    // <Div onClick={handleClick}>
-    //   <GameBox height={GAME_HEIGHT} width={GAME_WIDTH}>
-    //     <Obstacle 
-    //       top={0}
-    //       width={OBSTACLE_WIDTH}
-    //       height={obstacleHeight}
-    //       left={obstacleLeft}
-    //     />
-    //     <Obstacle
-    //       top={GAME_HEIGHT - (obstacleHeight + bottomObstacleHeight)}
-    //       width={OBSTACLE_WIDTH}
-    //       height={bottomObstacleHeight}
-    //       left={obstacleLeft}
-    //     />
-    //     <Player size={PLAYER_SIZE} top={playerPos}/>
-    //   </GameBox>
-    //   <span> {score} </span>
-    // </Div>
   );
 }
-
-
 
 // Objects //
 const Player = styled.div`
@@ -269,6 +252,12 @@ const Div = styled.div`
     font-size: 24px;
     position: absolute;
   }
+  & p {
+    color: black;
+    font-size: 24px;
+    position: absolute;
+    top: 90%;
+  }
 `;
 
 const GameBox = styled.div`
@@ -276,15 +265,6 @@ const GameBox = styled.div`
   width: ${(props) => props.width}px;
   background-color:blue;
   overflow: hidden;
-`;
-
-const Obstacle = styled.div`
-  position: relative;
-  height: ${(props) => props.height}px;
-  width: ${(props) => props.width}px;
-  top: ${(props) => props.top}px;
-  background-color:green;
-  left: ${(props) => props.left}px;
 `;
 
 const Card = styled.div`
@@ -304,6 +284,12 @@ const Card = styled.div`
     left: 50%;
     transform: translate(-50% , -50%);
     -webkit-transform: translate(-50%, -50%);
+    pointer-events: none;
+    text-align: center
   }
 `;
 
+const Row = styled.div`
+  position: relative;
+  top: ${(props) => props.top}px;
+`;
