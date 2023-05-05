@@ -3,7 +3,6 @@ import Fun from 'dataset/sets/Fun';
 import styled from "styled-components";
 import {useEffect, useState} from "react";
 
-
 import {
   CardSide,
   MediaType,
@@ -24,24 +23,24 @@ const IMAGE_WIDTH = 120;
 //   const { disneyPrincessTrivia: quizletSet } = Fun.getAllSetsMap();
 //   // const quizletSet = Quizlet.getRandomSet();
 
-//   const renderMedia = (media: SerializedMedia) => {
-//     switch (media.type) {
-//       case MediaType.TEXT:
-//         const { plainText } = media as SerializedMediaText;
-//         return <div key={media.type}>{plainText}</div>;
-//       case MediaType.IMAGE:
-//         const { url } = media as SerializedMediaImage;
-//         return (
-//           <Image
-//             alt="term image"
-//             height={IMAGE_HEIGHT}
-//             key={media.type}
-//             src={url}
-//             width={IMAGE_WIDTH}
-//           />
-//         );
-//     }
-//   };
+  // const renderMedia = (media: SerializedMedia) => {
+  //   switch (media.type) {
+  //     case MediaType.TEXT:
+  //       const { plainText } = media as SerializedMediaText;
+  //       return <div key={media.type}>{plainText}</div>;
+  //     case MediaType.IMAGE:
+  //       const { url } = media as SerializedMediaImage;
+  //       return (
+  //         <Image
+  //           alt="term image"
+  //           height={IMAGE_HEIGHT}
+  //           key={media.type}
+  //           src={url}
+  //           width={IMAGE_WIDTH}
+  //         />
+  //       );
+  //   }
+  // };
 //   const renderTerm = (studiableItem: StudiableItem) => (
 //     <div key={studiableItem.id}>
 //       {studiableItem.cardSides.map(cardSide => {
@@ -71,10 +70,15 @@ const IMAGE_WIDTH = 120;
 //   );
 // }
 
+const CARD_WIDTH = 200;
+const CARD_HEIGHT = 150;
+const CARD_MARGIN = 5;
 
-const PLAYER_SIZE = 30;
-const GAME_HEIGHT = 500;
-const GAME_WIDTH = 500;
+
+const PLAYER_SIZE = 50;
+const BULLET_SIZE = 20;
+const GAME_HEIGHT = 750;
+const GAME_WIDTH = 1000;
 const GRAVITY = 3;
 const JUMP_HEIGHT = 100;
 const OBSTACLE_WIDTH = 40;
@@ -87,97 +91,173 @@ export default function Page() {
   const [obstacleHeight, setObstacleHeight] = useState(100);
   const [obstacleLeft, setObstacleLeft] = useState(GAME_WIDTH - OBSTACLE_WIDTH);
   const [score, setScore] = useState(0);
-
-
   const bottomObstacleHeight = GAME_HEIGHT - OBSTACLE_GAP - obstacleHeight;
 
-  // Moves the player continuously downward until it reaches the edge.
+
+  const [mousePos, setMousePos] = useState({x:0, y:0});
+  const [bulletIsActive, setBulletIsActive] = useState(false);
+  const [bulletVelocity, setBulletVelocity] = useState({x:0, y:0});
+
+
+  // Tracks the mouse's position on the screen when clicked.
   useEffect(() => {
-    let timeId;
-    if (gameHasStarted && playerPos < GAME_HEIGHT - PLAYER_SIZE) {
-      timeId = setInterval(() => {
-        setPlayerPos(playerPos => playerPos + GRAVITY)
-      }, 12)
-    }
-    return () => {
-      clearInterval(timeId);
+    const handleMouseClick = (event: { clientX: any; clientY: any; }) => {
+      
+
+      // setBulletPos({})
+      
+      // setMousePos({ x: event.clientX, y: event.clientY});
+      setBulletIsActive(true);
     };
-  }, [playerPos, gameHasStarted]);
+      window.addEventListener('click', handleMouseClick);
 
-  // Moves the obstacle continuously to the right until it reaches the right edge.
-  useEffect(() => {
-    let obstacleId;
-    if (gameHasStarted && obstacleLeft >= -OBSTACLE_WIDTH) {
-      obstacleId = setInterval(() => {
-        setObstacleLeft((obstacleLeft) => obstacleLeft - 5);
-      }, 12);
       return () => {
-        clearInterval(obstacleId);
+        window.removeEventListener(
+          'click',
+          handleMouseClick
+        );
       };
-    }
-    else {
-      setObstacleLeft(GAME_WIDTH - OBSTACLE_WIDTH);
-      setObstacleHeight(Math.floor(Math.random() * (GAME_HEIGHT - OBSTACLE_GAP)));
-      setScore(score => score + 1);
-    }
-  }, [obstacleLeft, gameHasStarted]);
-
-
-  // Checks for collision between the player and the obstacles.
+  }, []);
+  
+  // Fires the bullet from the player to the mouse's clicked location.
   useEffect(() => {
-    const hasCollidedWithTopObstacle = playerPos >= 0 && playerPos < obstacleHeight;
-    const hasCollidedWithBottomObstacle = playerPos <= 500 && playerPos >= 500 - bottomObstacleHeight;
-    
-    if (obstacleLeft >= 0 && obstacleLeft <= OBSTACLE_WIDTH && (hasCollidedWithBottomObstacle || hasCollidedWithTopObstacle)) {
-      setGameHasStarted(false);
+    let bulletId;
+    if (bulletIsActive) {
+      bulletId = setInterval(() => {
+              // setBulletPos(bulletPos => {x: bulletPos.x + xVelocity, y: bulletPos.y + yVelocity})
+            }, 12)
     }
-  }, [obstacleLeft, gameHasStarted, playerPos, obstacleHeight, bottomObstacleHeight]);
+      return () => {
+        clearInterval(bulletId);
+      };
+    }, [bulletIsActive]);
 
 
-  // Logic for jumping.
-  const handleClick = () => {
-    let newPlayerPos = playerPos - JUMP_HEIGHT;
+  // // Moves the player continuously downward until it reaches the edge.
+  // useEffect(() => {
+  //   let timeId;
+  //   if (gameHasStarted && playerPos < GAME_HEIGHT - PLAYER_SIZE) {
+  //     timeId = setInterval(() => {
+  //       setPlayerPos(playerPos => playerPos + GRAVITY)
+  //     }, 12)
+  //   }
+  //   return () => {
+  //     clearInterval(timeId);
+  //   };
+  // }, [playerPos, gameHasStarted]);
 
-    if (!gameHasStarted) {
-      setGameHasStarted(true);
-      setScore(score => 0);
-    } else if (newPlayerPos < 0) {
-      setPlayerPos(0);
-    } else {
-      setPlayerPos(newPlayerPos);
-    }
-  }
+
+  // // Moves the obstacle continuously to the right until it reaches the right edge.
+  // useEffect(() => {
+  //   let obstacleId;
+  //   if (gameHasStarted && obstacleLeft >= -OBSTACLE_WIDTH) {
+  //     obstacleId = setInterval(() => {
+  //       setObstacleLeft((obstacleLeft) => obstacleLeft - 5);
+  //     }, 12);
+  //     return () => {
+  //       clearInterval(obstacleId);
+  //     };
+  //   } else {
+  //     setObstacleLeft(GAME_WIDTH - OBSTACLE_WIDTH);
+  //     setObstacleHeight(Math.floor(Math.random() * (GAME_HEIGHT - OBSTACLE_GAP)));
+  //     setScore(score => score + 1);
+  //   }
+  // }, [obstacleLeft, gameHasStarted]);
+
+
+  // // Checks for collision between the player and the obstacles.
+  // useEffect(() => {
+  //   const hasCollidedWithTopObstacle = playerPos >= 0 && playerPos < obstacleHeight;
+  //   const hasCollidedWithBottomObstacle = playerPos <= 500 && playerPos >= 500 - bottomObstacleHeight;
+  //   if (obstacleLeft >= 0 && obstacleLeft <= OBSTACLE_WIDTH && (hasCollidedWithBottomObstacle || hasCollidedWithTopObstacle)) {
+  //     setGameHasStarted(false);
+  //   }
+  // }, [obstacleLeft, gameHasStarted, playerPos, obstacleHeight, bottomObstacleHeight]);
+
+
+  // // Logic for jumping.
+  // const handleClick = () => {
+  //   let newPlayerPos = playerPos - JUMP_HEIGHT;
+  //   if (!gameHasStarted) {
+  //     setGameHasStarted(true);
+  //     setScore(score => 0);
+  //   } else if (newPlayerPos < 0) {
+  //     setPlayerPos(0);
+  //   } else {
+  //     setPlayerPos(newPlayerPos);
+  //   }
+  // }
 
 
   return (
-    <Div onClick={handleClick}>
+    <Div>
       <GameBox height={GAME_HEIGHT} width={GAME_WIDTH}>
-        <Obstacle 
-          top={0}
-          width={OBSTACLE_WIDTH}
-          height={obstacleHeight}
-          left={obstacleLeft}
-        />
-        <Obstacle
-          top={GAME_HEIGHT - (obstacleHeight + bottomObstacleHeight)}
-          width={OBSTACLE_WIDTH}
-          height={bottomObstacleHeight}
-          left={obstacleLeft}
-        />
-        <Player size={PLAYER_SIZE} top={playerPos}/>
+          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={0}>
+            <span> Term 1 </span>
+          </Card>
+          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH}>
+            <span> Term 2 </span>
+          </Card>
+          <Card height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH * 2}>
+            <span> Term 3 </span>
+          </Card>
+
+          <Player size={PLAYER_SIZE} top={GAME_HEIGHT - PLAYER_SIZE} marginLeft={-PLAYER_SIZE / 2}/>
+          <Bullet size={BULLET_SIZE} top={GAME_HEIGHT - BULLET_SIZE} marginLeft={-BULLET_SIZE / 2}/>
       </GameBox>
-      <span> {score} </span>
+      {/* <div>
+      The mouse is at position{' '}
+      <b>
+        ({mousePos.x}, {mousePos.y})
+      </b>
+    </div> */}
     </Div>
+
+
+    // <Div onClick={handleClick}>
+    //   <GameBox height={GAME_HEIGHT} width={GAME_WIDTH}>
+    //     <Obstacle 
+    //       top={0}
+    //       width={OBSTACLE_WIDTH}
+    //       height={obstacleHeight}
+    //       left={obstacleLeft}
+    //     />
+    //     <Obstacle
+    //       top={GAME_HEIGHT - (obstacleHeight + bottomObstacleHeight)}
+    //       width={OBSTACLE_WIDTH}
+    //       height={bottomObstacleHeight}
+    //       left={obstacleLeft}
+    //     />
+    //     <Player size={PLAYER_SIZE} top={playerPos}/>
+    //   </GameBox>
+    //   <span> {score} </span>
+    // </Div>
   );
 }
 
+
+
+// Objects //
 const Player = styled.div`
   position: absolute;
   background-color: red;
   height: ${(props) => props.size}px;
   width: ${(props) => props.size}px;
   top: ${(props) => props.top}px;
+  border-radius: 10%;
+  left: 50%;
+  margin-left: ${(props) => props.marginLeft}px;
+`;
+
+const Bullet = styled.div`
+  position: absolute;
+  background-color: yellow;
+  height: ${(props) => props.size}px;
+  width: ${(props) => props.size}px;
+  top: ${(props) => props.top}px;
   border-radius: 50%;
+  left: 50%;
+  margin-left: ${(props) => props.marginLeft}px;
 `;
 
 const Div = styled.div`
@@ -205,5 +285,25 @@ const Obstacle = styled.div`
   top: ${(props) => props.top}px;
   background-color:green;
   left: ${(props) => props.left}px;
+`;
+
+const Card = styled.div`
+  display: inline-block;
+  position: relative;
+  background-color: lightslategray;
+  height: ${(props) => props.height}px;
+  width: ${(props) => props.width}px;
+  top: ${(props) => props.top}px;
+  left: ${(props) => props.left}px;
+  border-radius: 10%;
+  & span {
+    color: white;
+    font-size: 24px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50% , -50%);
+    -webkit-transform: translate(-50%, -50%);
+  }
 `;
 
