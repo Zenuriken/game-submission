@@ -2,11 +2,11 @@ import Fun from 'dataset/sets/Fun';
 import styled from "styled-components";
 import {useEffect, useState} from "react";
 
-const CARD_WIDTH = 200;
-const CARD_HEIGHT = 150;
 const GAME_HEIGHT = 600;
-const GAME_WIDTH = 1000;
+const GAME_WIDTH = 850;
 const BAR_HEIGHT = 50;
+const CARD_WIDTH = GAME_WIDTH / 5;
+const CARD_HEIGHT = 120;
 const GRAVITY = 2;
 
 export default function Game() {
@@ -82,6 +82,7 @@ export default function Game() {
     let selected = shuffled.slice(0, 3);
     for (var i = 0; i < selected.length; i++) {
       let def = selected[i].cardSides[0].media[0]["plainText"];
+      let img = selected[i].cardSides[1].media[1]["url"];
       document.getElementById(`card-${i}-text`).innerHTML = def;
     }
     const id = Math.floor((Math.random() * 3));
@@ -90,51 +91,41 @@ export default function Game() {
     setCurrTerm(term);
   }
   return (
-    <Div onClick={startGame}>
-      <Bar top={0} height={BAR_HEIGHT} width={GAME_WIDTH} backgroundColor="#5838ff;">
+    <Container onClick={startGame}>
+      <Box top={0} height={BAR_HEIGHT} width={GAME_WIDTH} backgroundColor="#5838ff;">
         <span>Score: {score} | Lives: {lives}</span>
-      </Bar>
-      <GameBox height={GAME_HEIGHT} width={GAME_WIDTH} top={BAR_HEIGHT}>
-        <Row top={rowPos}>
-          <Card id="card-0" height={CARD_HEIGHT} width={CARD_WIDTH} left={0} onClick={(e) => handleClick(e)}>
+      </Box>
+      <Box height={GAME_HEIGHT} width={GAME_WIDTH} top={BAR_HEIGHT} backgroundColor="#0d052e;">
+        <Row top={rowPos} gap={CARD_WIDTH}>
+          <Card id="card-0" height={CARD_HEIGHT} width={CARD_WIDTH} onClick={(e) => handleClick(e)}>
             <span id="card-0-text"> Definition 1 </span>
           </Card>
-          <Card id="card-1" height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH} onClick={(e) => handleClick(e)}>
+          <Card id="card-1" height={CARD_HEIGHT} width={CARD_WIDTH} onClick={(e) => handleClick(e)}>
             <span id="card-1-text"> Definition 2 </span>
           </Card>
-          <Card id="card-2" height={CARD_HEIGHT} width={CARD_WIDTH} left={CARD_WIDTH * 2} onClick={(e) => handleClick(e)}>
+          <Card id="card-2" height={CARD_HEIGHT} width={CARD_WIDTH} onClick={(e) => handleClick(e)}>
             <span id="card-2-text"> Definition 3 </span>
           </Card>
         </Row>
-      </GameBox>
-      <Bar top={BAR_HEIGHT + GAME_HEIGHT} height={BAR_HEIGHT} width={GAME_WIDTH} backgroundColor="#912626;">
+      </Box>
+      <Box top={BAR_HEIGHT + GAME_HEIGHT} height={BAR_HEIGHT} width={GAME_WIDTH} backgroundColor="#912626;">
         <span>{currTerm}</span>
-      </Bar>
-    </Div>
+      </Box>
+    </Container>
   );
 }
 
 // Objects //
-const Div = styled.div`
+const Container = styled.div`
   display: flex;
-  width: 100%;
   justify-content: center;
 `;
 
-const GameBox = styled.div`
-  top: ${(props) => props.top}px;
+const Box = styled.div`
   height: ${(props) => props.height}px;
   width: ${(props) => props.width}px;
-  background-color:#0d052e;
-  overflow: hidden;
-  position: absolute;
-`;
-
-const Bar = styled.div`
   top: ${(props) => props.top}px;
-  height: ${(props) => props.height}px;
-  width: ${(props) => props.width}px;
-  background-color:${(props) => props.backgroundColor}px;
+  background-color:${(props) => props.backgroundColor};
   overflow: hidden;
   position: absolute;
   & span {
@@ -144,35 +135,23 @@ const Bar = styled.div`
     top: 50%;
     left: 50%;
     transform: translate(-50% , -50%);
-    -webkit-transform: translate(-50%, -50%);
     pointer-events: none;
     text-align: center
   }
 `;
 
 const Card = styled.div`
-  display: inline-block;
-  position: relative;
-  background-color: #323657;
   height: ${(props) => props.height}px;
   width: ${(props) => props.width}px;
-  top: ${(props) => props.top}px;
-  left: ${(props) => props.left}px;
+  position: relative;
+  background-color: #323657;
   border-radius: 10%;
-  & span {
-    color: white;
-    font-size: 24px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50% , -50%);
-    -webkit-transform: translate(-50%, -50%);
-    pointer-events: none;
-    text-align: center
-  }
 `;
 
 const Row = styled.div`
-  position: relative;
+  gap: ${(props) => props.gap}px;
   top: ${(props) => props.top}px;
+  position: relative;
+  display: flex;
+  flex-direction: row;
 `;
